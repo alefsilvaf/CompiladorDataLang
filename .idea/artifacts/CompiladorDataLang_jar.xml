@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="CompiladorDataLang:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/CompiladorDataLang_jar</output-path>
+    <root id="archive" name="CompiladorDataLang.jar">
+      <element id="module-output" name="CompiladorDataLang" />
+    </root>
+  </artifact>
+</component>

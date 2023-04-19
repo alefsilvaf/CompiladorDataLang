@@ -2,6 +2,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 public class PythonLexer {
 
@@ -77,7 +81,7 @@ public class PythonLexer {
         return new Token(type, lexeme);
     }
 
-    private Token getNextToken() {
+    Token getNextToken() {
         while (peek() != '\0') {
             if (peek() == ' ' || peek() == '\t' || peek() == '\r' || peek() == '\n') {
                 advance();
@@ -225,40 +229,37 @@ public class PythonLexer {
         } while (!token.getType().equals("EOF"));
         return tokens;
     }
-
-    public static void main(String[] args) {
-        String input = "x = 42\ny = 'hello, world'\nprint(x + 2)\n";
-        PythonLexer lexer = new PythonLexer(input);
-        List<Token> tokens = lexer.lex();
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
-    }
-    public class Token {
-
-        private final String type;
-        private final String lexeme;
-
-        public Token(String type, String lexeme) {
-            this.type = type;
-            this.lexeme = lexeme;
-        }
-
-        public String getType() {
-            return type;
+        public static String main() {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Selecione um arquivo de entrada");
+            chooser.setFileFilter(new FileNameExtensionFilter("Arquivos de texto", "txt"));
+            int resultado = chooser.showOpenDialog(null);
+            String output = null;
+            if (resultado == JFileChooser.APPROVE_OPTION) {
+                String caminhoDoArquivo = chooser.getSelectedFile().getPath();
+                String input = readFile(caminhoDoArquivo);
+                output = "";
+                PythonLexer lexer = new PythonLexer(input);
+                List<Token> tokens = lexer.lex();
+                for (Token token : tokens) {
+                    output += token + "\n";
+                }
+            } else {
+                output = "Nenhum arquivo selecionado.";
+            }
+            return output;
         }
 
-        public String getLexeme() {
-            return lexeme;
+        private static String readFile(String filePath) {
+            StringBuilder content = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    content.append(line).append("\n");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return content.toString();
         }
-
-        @Override
-        public String toString() {
-            return "Token{" +
-                    "type='" + type + '\'' +
-                    ", lexeme='" + lexeme + '\'' +
-                    '}';
-        }
-    }
-
 }
