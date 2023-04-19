@@ -85,9 +85,9 @@ public class PythonLexer {
         while (peek() != '\0') {
             if (peek() == ' ' || peek() == '\t' || peek() == '\r' || peek() == '\n') {
                 advance();
-            } else if (peek() == '#' && buffer.isEmpty()) {
+            } else if (peek() == '#') {
                 // Ignore comments
-                while (peek() != '\n' && peek() != '\0') {
+                while (peek() != '\n') {
                     advance();
                 }
             } else if (isAlphaNumeric(peek())) {
