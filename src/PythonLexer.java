@@ -40,6 +40,10 @@ public class PythonLexer {
         put("global", "global");
         put("async", "async");
         put("await", "await");
+        put("IFSULDEMINAS", "IFSULDEMINAS");
+        put("INICIO", "INICIO");
+        put("FIM", "FIM");
+        put("COMPILADORES", "COMPILADORES");
     }};
 
     public PythonLexer(String input) {
@@ -71,7 +75,7 @@ public class PythonLexer {
     private String getBufferContent() {
         StringBuilder builder = new StringBuilder();
         for (char c : buffer) {
-            builder.append(c);
+            if(c != '\n' && c != '\t') builder.append(c);
         }
         buffer.clear();
         return builder.toString();
@@ -82,15 +86,18 @@ public class PythonLexer {
     }
 
     Token getNextToken() {
+
         while (peek() != '\0') {
-            if (peek() == ' ' || peek() == '\t' || peek() == '\r' || peek() == '\n') {
+            if (peek() == '\n' || peek() == ' ' || peek() == '\t' || peek() == '\r') {
                 advance();
-            } else if (peek() == '#') {
+            }
+            else if (peek() == '#') {
                 // Ignore comments
                 while (peek() != '\n') {
                     advance();
                 }
-            } else if (isAlphaNumeric(peek())) {
+            }
+            else if (isAlphaNumeric(peek())) {
                 while (isAlphaNumeric(peek())) {
                     advance();
                 }
@@ -101,7 +108,8 @@ public class PythonLexer {
                 } else {
                     return createToken("IDENTIFIER", lexeme);
                 }
-            } else if (isDigit(peek())) {
+            }
+            else if (isDigit(peek())) {
                 while (isDigit(peek())) {
                     advance();
                 }
@@ -113,7 +121,8 @@ public class PythonLexer {
                 }
                 String lexeme = getBufferContent();
                 return createToken("NUMBER", lexeme);
-            } else {
+            }
+            else {
                 switch (peek()) {
                     case '+':
                         advance();
@@ -158,7 +167,6 @@ public class PythonLexer {
                             advance();
                             return createToken("NOT_EQUALS", "!=");
                         }
-                        throw new RuntimeException("Unexpected character: " + peek());
                     case '(':
                         advance();
                         return createToken("LEFT_PAREN", "(");
@@ -213,7 +221,10 @@ public class PythonLexer {
                         String lexeme = getBufferContent();
                         return createToken("STRING", lexeme);
                     default:
-                        throw new RuntimeException("Unexpected character: " + peek());
+                        String lexeme1 = String.valueOf(peek());
+                        advance();
+                        return createToken("null", "CARACTERE NÃO RECONHECIDO: " + lexeme1);
+
                 }
             }
         }
@@ -229,28 +240,31 @@ public class PythonLexer {
         } while (!token.getType().equals("EOF"));
         return tokens;
     }
-        public static String main() {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Selecione um arquivo de entrada");
-            chooser.setFileFilter(new FileNameExtensionFilter("Arquivos de texto", "txt"));
-            int resultado = chooser.showOpenDialog(null);
-            String output = null;
-            if (resultado == JFileChooser.APPROVE_OPTION) {
-                String caminhoDoArquivo = chooser.getSelectedFile().getPath();
-                String input = readFile(caminhoDoArquivo);
-                output = "";
-                PythonLexer lexer = new PythonLexer(input);
-                List<Token> tokens = lexer.lex();
-                for (Token token : tokens) {
-                    output += token + "\n";
-                }
-            } else {
-                output = "Nenhum arquivo selecionado.";
+    public static String[] main() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Selecione um arquivo de entrada");
+        chooser.setFileFilter(new FileNameExtensionFilter("Arquivos de texto", "txt"));
+        int resultado = chooser.showOpenDialog(null);
+        String[] output = new String[2];
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            String caminhoDoArquivo = chooser.getSelectedFile().getPath();
+            String input = readFile(caminhoDoArquivo);
+            output[0] = "";
+            output[1] = caminhoDoArquivo;
+            PythonLexer lexer = new PythonLexer(input);
+            List<Token> tokens = lexer.lex();
+            for (Token token : tokens) {
+                output[0] += token;
             }
-            return output;
+            output[1]=input;
+        } else {
+            output[0] = "Nenhum arquivo selecionado.";
+            output[1] = "";
         }
+        return output;
+    }
 
-        private static String readFile(String filePath) {
+    private static String readFile(String filePath) {
             StringBuilder content = new StringBuilder();
             try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
                 String line;
