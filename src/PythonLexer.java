@@ -12,6 +12,11 @@ public class PythonLexer {
     private final String input;
     private int position;
     private final List<Character> buffer = new ArrayList<>();
+    public static int openParenCount = 0;
+    public static int openBraceCount = 0;
+    public static int openBracketCount = 0 ;
+
+    public static int lineCount = 0;
 
     private final Map<String, String> keywords = new HashMap<>() {{
         put("and", "and");
@@ -53,6 +58,30 @@ public class PythonLexer {
     private char advance() {
         char currentChar = peek();
         buffer.add(currentChar);
+
+        switch (currentChar) {
+            case '(':
+                openParenCount++;
+                break;
+            case '{':
+                System.out.println("Alo");
+                openBraceCount ++;
+                System.out.println(openBraceCount);
+                break;
+            case '[':
+                openBracketCount ++;
+                break;
+            case ')':
+                openParenCount--;
+                break;
+            case '}':
+                openBraceCount --;
+                System.out.println(openBraceCount);
+                break;
+            case ']':
+                openBracketCount--;
+                break;
+        }
         position++;
         return currentChar;
     }
@@ -81,13 +110,16 @@ public class PythonLexer {
         return builder.toString();
     }
 
-    private Token createToken(String type, String lexeme) {
-        return new Token(type, lexeme);
+    private Token createToken(String type, String lexeme, int linhaAtual, int position) {
+        return new Token(type, lexeme, linhaAtual, position);
     }
 
     Token getNextToken() {
 
         while (peek() != '\0') {
+            if(peek() == '\n'){
+                lineCount ++;
+            }
             if (peek() == '\n' || peek() == ' ' || peek() == '\t' || peek() == '\r') {
                 advance();
             }
@@ -104,9 +136,9 @@ public class PythonLexer {
                 String lexeme = getBufferContent();
                 String keyword = keywords.getOrDefault(lexeme, null);
                 if (keyword != null) {
-                    return createToken(keyword, lexeme);
+                    return createToken(keyword, lexeme, lineCount, position );
                 } else {
-                    return createToken("IDENTIFIER", lexeme);
+                    return createToken("IDENTIFIER", lexeme, lineCount, position);
                 }
             }
             else if (isDigit(peek())) {
@@ -120,74 +152,74 @@ public class PythonLexer {
                     }
                 }
                 String lexeme = getBufferContent();
-                return createToken("NUMBER", lexeme);
+                return createToken("NUMBER", lexeme, lineCount, position);
             }
             else {
                 switch (peek()) {
                     case '+':
                         advance();
-                        return createToken("PLUS", "+");
+                        return createToken("PLUS", "+", lineCount, position);
                     case '-':
                         advance();
 
-                        return createToken("MINUS", "-");
+                        return createToken("MINUS", "-", lineCount, position);
                     case '*':
                         advance();
-                        return createToken("MULTIPLY", "*");
+                        return createToken("MULTIPLY", "*", lineCount, position);
                     case '/':
                         advance();
-                        return createToken("DIVIDE", "/");
+                        return createToken("DIVIDE", "/", lineCount, position);
                     case '%':
                         advance();
-                        return createToken("MODULO", "%");
+                        return createToken("MODULO", "%", lineCount, position);
                     case '=':
                         advance();
                         if (peek() == '=') {
                             advance();
-                            return createToken("EQUALS", "==");
+                            return createToken("EQUALS", "==", lineCount, position);
                         }
-                        return createToken("ASSIGN", "=");
+                        return createToken("ASSIGN", "=", lineCount, position);
                     case '<':
                         advance();
                         if (peek() == '=') {
                             advance();
-                            return createToken("LESS_EQUALS", "<=");
+                            return createToken("LESS_EQUALS", "<=", lineCount, position);
                         }
-                        return createToken("LESS", "<");
+                        return createToken("LESS", "<", lineCount, position);
                     case '>':
                         advance();
                         if (peek() == '=') {
                             advance();
-                            return createToken("GREATER_EQUALS", ">=");
+                            return createToken("GREATER_EQUALS", ">=", lineCount, position);
                         }
-                        return createToken("GREATER", ">");
+                        return createToken("GREATER", ">", lineCount, position);
                     case '!':
                         advance();
                         if (peek() == '=') {
                             advance();
-                            return createToken("NOT_EQUALS", "!=");
+                            return createToken("NOT_EQUALS", "!=", lineCount, position);
                         }
                     case '(':
                         advance();
-                        return createToken("LEFT_PAREN", "(");
+                        return createToken("LEFT_PAREN", "(", lineCount, position);
                     case ')':
                         advance();
-                        return createToken("RIGHT_PAREN", ")");
+                        return createToken("RIGHT_PAREN", ")", lineCount, position);
                     case '[':
                         advance();
-                        return createToken("LEFT_BRACKET", "[");
+                        return createToken("LEFT_BRACKET", "[", lineCount, position);
                     case ']':
                         advance();
-                        return createToken("RIGHT_BRACKET", "]");
+                        return createToken("RIGHT_BRACKET", "]", lineCount, position);
                     case '{':
                         advance();
-                        return createToken("LEFT_BRACE", "{");
+                        return createToken("LEFT_BRACE", "{", lineCount, position);
                     case '}':
                         advance();
-                        return createToken("RIGHT_BRACE", "}");
+                        return createToken("RIGHT_BRACE", "}", lineCount, position);
                     case ',':
                         advance();
-                        return createToken("COMMA", ",");
+                        return createToken("COMMA", ",", lineCount, position);
                     case '.':
                         advance();
                         if (isDigit(peek())) {
@@ -195,15 +227,15 @@ public class PythonLexer {
                                 advance();
                             }
                             String lexeme = getBufferContent();
-                            return createToken("NUMBER", "." + lexeme);
+                            return createToken("NUMBER", "." + lexeme, lineCount, position);
                         }
-                        return createToken("DOT", ".");
+                        return createToken("DOT", ".", lineCount, position);
                     case ':':
                         advance();
-                        return createToken("COLON", ":");
+                        return createToken("COLON", ":", lineCount, position);
                     case ';':
                         advance();
-                        return createToken("SEMICOLON", ";");
+                        return createToken("SEMICOLON", ";", lineCount, position);
                     case '\'':
                     case '\"':
                         char quote = peek();
@@ -219,16 +251,16 @@ public class PythonLexer {
                         }
                         advance(); // consume the closing quote
                         String lexeme = getBufferContent();
-                        return createToken("STRING", lexeme);
+                        return createToken("STRING", lexeme, lineCount, position);
                     default:
                         String lexeme1 = String.valueOf(peek());
                         advance();
-                        return createToken("null", "CARACTERE NÃO RECONHECIDO: " + lexeme1);
+                        return createToken("null", "CARACTERE NÃO RECONHECIDO: " + lexeme1, lineCount, position);
 
                 }
             }
         }
-        return createToken("EOF", "");
+        return createToken("EOF", "", lineCount, position);
     }
 
     public List<Token> lex() {
@@ -255,6 +287,16 @@ public class PythonLexer {
             List<Token> tokens = lexer.lex();
             for (Token token : tokens) {
                 output[0] += token;
+            }
+
+            System.out.println(tokens);
+
+            if(openParenCount != 0 ){
+                output[0] += "Você se esqueceu de fechar parênteses! ')'!";
+            } else if (openBraceCount != 0 ) {
+                output[0] += "Você se esqueceu de fechar chaves! '}'!";
+            } else if (openBracketCount != 0) {
+                output[0] += "Você se esqueceu de fechar colchetes! ']'!";
             }
             output[1]=input;
         } else {
