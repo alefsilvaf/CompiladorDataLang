@@ -94,7 +94,7 @@ public class PythonLexer {
     }
 
     private boolean isAlphaNumeric(char c) {
-        return Character.isLetterOrDigit(c) || c == '_';
+        return Character.isLetter(c) || c == '_';
     }
 
     private boolean isDigit(char c) {
@@ -142,15 +142,34 @@ public class PythonLexer {
                 }
             }
             else if (isDigit(peek())) {
+                List<Character> digits = new ArrayList<Character>();
+
                 while (isDigit(peek())) {
+                    digits.add(peek());
+
+                    if (digits.size() > 8) {
+                        return createToken("error", "TAMANHO DE NUMERO EXCEDIDO", lineCount, position);
+                    }
+
                     advance();
                 }
+
                 if (peek() == '.') {
+                    digits.clear();
+
                     advance();
+
                     while (isDigit(peek())) {
+                        digits.add(peek());
+
+                        if (digits.size() > 8) {
+                            return createToken("error", "TAMANHO DE NUMERO EXCEDIDO", lineCount, position);
+                        }
+
                         advance();
                     }
                 }
+
                 String lexeme = getBufferContent();
                 return createToken("NUMBER", lexeme, lineCount, position);
             }
@@ -255,7 +274,7 @@ public class PythonLexer {
                     default:
                         String lexeme1 = String.valueOf(peek());
                         advance();
-                        return createToken("null", "CARACTERE NÃO RECONHECIDO: " + lexeme1, lineCount, position);
+                        return createToken("error", "CARACTERE NÃO RECONHECIDO: " + lexeme1, lineCount, position);
 
                 }
             }

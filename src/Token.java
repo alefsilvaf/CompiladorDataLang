@@ -23,6 +23,10 @@ public class Token {
 
     @Override
     public String toString() {
-        return " Token: " + type + ", Lexema: '" + lexeme + "' Linha: " + lineCount + " Coluna: " + position +"\n";
+        if(type == "error"){
+            return "Erro encontrado na linha " + lineCount + ", coluna: " + position +" Descrição: "+ lexeme+"\n";
+        } else {
+            return " Token: " + type + ", Lexema: '" + lexeme + "' Linha: " + lineCount + " Coluna: " + position +"\n";
+        }
     }
 }
